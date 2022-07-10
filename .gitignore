@@ -1,0 +1,5 @@
+.stack-work/
+*~
+/out
+app/Secret.hs
+/.idea

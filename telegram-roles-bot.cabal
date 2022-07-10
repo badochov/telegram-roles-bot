@@ -1,0 +1,79 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           telegram-roles-bot
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Github username here/telegram-roles-bot#readme>
+homepage:       https://github.com/Github username here/telegram-roles-bot#readme
+bug-reports:    https://github.com/Github username here/telegram-roles-bot/issues
+author:         Author name here
+maintainer:     Author email here
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/Github username here/telegram-roles-bot
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_telegram_roles_bot
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , containers ==0.6.4.1
+    , hashable ==1.3.5.0
+    , mtl ==2.2.2
+    , telegram-bot-simple ==0.4.5
+    , text ==1.2.5.0
+    , unordered-containers ==0.2.17.0
+  default-language: Haskell2010
+
+executable telegram-roles-bot-exe
+  main-is: Main.hs
+  other-modules:
+      Secret
+      Paths_telegram_roles_bot
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers ==0.6.4.1
+    , hashable ==1.3.5.0
+    , mtl ==2.2.2
+    , telegram-bot-simple ==0.4.5
+    , telegram-roles-bot
+    , text ==1.2.5.0
+    , unordered-containers ==0.2.17.0
+  default-language: Haskell2010
+
+test-suite telegram-roles-bot-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_telegram_roles_bot
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers ==0.6.4.1
+    , hashable ==1.3.5.0
+    , mtl ==2.2.2
+    , telegram-bot-simple ==0.4.5
+    , telegram-roles-bot
+    , text ==1.2.5.0
+    , unordered-containers ==0.2.17.0
+  default-language: Haskell2010
