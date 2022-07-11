@@ -17,6 +17,8 @@ import Secret (botKey)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
 import Telegram.Bot.Simple.UpdateParser
+import Text.Pretty.Simple (pShowNoColor)
+import Data.Text.Lazy (toStrict)
 
 type Role = Text
 
@@ -118,14 +120,21 @@ rolesBot =
           Just err -> model <# replyText err
       ListRoles ->
         model <# do
-          replyText $ Data.Text.pack (show $ roles model)
+          replyText $ toStrict $ pShowNoColor $ roles model
       Mention (t, mid) ->
         model <# do
           handleMention t mid model
 
     helpMessage =
       Data.Text.unlines
-        []
+        [
+          "This bot brings roles features to your Telegram chat!",
+          "",
+          "`/role_create <role_name>*` creates roles",
+          "`/role_add <role_name> <mention>*` adds role to the mentioned users",
+          "`/role_remove <role_name> <mention>*` removes role from the mentioned users",
+          "`/role_list` list roles and assigned people"
+        ]
 
 handleMention :: Text -> MessageId -> Model -> BotM ()
 handleMention t mid Model {roles} =
@@ -169,7 +178,7 @@ validateCreateRole t Model {roles} =
   in
     case errors of
       [] -> Nothing
-      _ -> Just $ Data.Text.intercalate (Data.Text.pack "\n") errors
+      _ -> Just $ Data.Text.unlines errors
 
 validateRemoveRole :: Text -> Model -> Maybe Text
 validateRemoveRole = validateAddRole
