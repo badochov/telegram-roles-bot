@@ -1,7 +1,6 @@
 -- TODO /help@niepowazne_reakcje_bot
 -- TODO print ppl in role after role_add / role_remove
 -- TODO role_alias
--- TODO always mention(not only if its first and only word
 -- TODO cooldown
 -- TODO investigate perf issues
 {-# LANGUAGE BlockArguments #-}
@@ -36,7 +35,7 @@ data Action
   | DeleteRole Text
   | CreateRole Text
   | ListRoles
-  | Mention (Text, MessageId)
+  | Msg (Text, MessageId)
   deriving (Show)
 
 newtype ReplyMessageM = ReplyMessageM (Maybe ReplyMessage)
@@ -86,13 +85,11 @@ command' name = do
 messageId :: UpdateParser MessageId
 messageId = UpdateParser (updateMessage >=> Just . messageMessageId)
 
-mention :: UpdateParser (Text, MessageId)
-mention = do
+message :: UpdateParser (Text, MessageId)
+message = do
   t <- text
   mid <- messageId
-  if "@" `Data.Text.isPrefixOf` t && length (Data.Text.words t) == 1
-    then pure (t, mid)
-    else fail "not mention"
+  pure (t, mid)
 
 addChatId :: UpdateParser a -> UpdateParser (ChatId, a)
 addChatId m = m >>= (\a -> fmap (,a) messageChatId)
@@ -110,13 +107,13 @@ rolesBot =
     updateToAction _ =
       parseUpdate $
         addChatId $
-          Mention <$> mention
-            <|> Help <$ command "help"
+          Help <$ command "help"
             <|> AddRole <$> command' "role_add"
             <|> RemoveRole <$> command' "role_remove"
             <|> CreateRole <$> command "role_create"
             <|> DeleteRole <$> command "role_delete"
             <|> ListRoles <$ command "role_list"
+            <|> Msg <$> message
 
     handleAction :: (ChatId, Action) -> IO Model -> Eff (ChatId, Action) (IO Model)
     handleAction (chatId, action) model =
@@ -130,7 +127,7 @@ rolesBot =
               CreateRole msg -> handleCreateRole msg m
               DeleteRole msg -> handleDeleteRole msg m
               ListRoles -> handleListRoles m
-              Mention (t, mid) ->
+              Msg (t, mid) ->
                 m <# do
                   handleMention t mid m
       where
@@ -183,14 +180,18 @@ rolesBot =
               "`/role_list` list roles and assigned people"
             ]
         handleMention :: Text -> MessageId -> IO Model -> BotM ReplyMessageM
-        handleMention t mid mM =
-          liftIO $
-            ( \m -> ReplyMessageM $ case HashMap.lookup (getMention t) (roles m) of
-                Just users -> Just $ createMsg users
-                Nothing -> Nothing
-            )
-              <$> mM
+        handleMention t mid mM = liftIO $ getMessage <$> mM
           where
+            getMessage m = ReplyMessageM (createMsg <$> getMentions m)
+            getMentions :: Model -> Maybe (Set Mention)
+            getMentions m = case textMentions of
+              [] -> Nothing
+              tM -> Just $ foldl (foldTextMention m) Set.empty tM
+            textMentions = filter isMention $ Data.Text.words t
+            isMention txt = Data.Text.take 1 txt == Data.Text.pack "@"
+            foldTextMention Model {roles} acc mention = case HashMap.lookup (Data.Text.drop 1 mention) roles of
+              Nothing -> acc
+              Just x -> Set.union x acc
             createMsg users =
               let (msgText, ents) = createMsgTextAndEntities users
                in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
@@ -207,7 +208,6 @@ rolesBot =
                in MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing
             createUser (TelegramId telegramId name) = User telegramId False name Nothing Nothing Nothing Nothing Nothing Nothing
             addToBack start back = Data.Text.intercalate (Data.Text.pack " ") [start, back]
-            getMention = Data.Text.drop 1 . head . Data.Text.words
 
 validateAddRole :: Text -> Model -> Maybe Text
 validateAddRole t Model {roles} =
