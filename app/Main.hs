@@ -1,4 +1,3 @@
--- TODO /help@niepowazne_reakcje_bot
 -- TODO print ppl in role after role_add / role_remove
 -- TODO role_alias
 -- TODO cooldown
@@ -23,7 +22,7 @@ import qualified Data.Text
 import Data.Text.Lazy (toStrict)
 import GHC.Generics (Generic)
 import Lib
-import Secret (botKey)
+import Secret (botKey, botUsername)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
 import Telegram.Bot.Simple.UpdateParser
@@ -94,8 +93,8 @@ message = do
 addChatId :: UpdateParser a -> UpdateParser (ChatId, a)
 addChatId m = m >>= (\a -> fmap (,a) messageChatId)
 
-rolesBot :: BotApp (IO Model) (ChatId, Action)
-rolesBot =
+rolesBot :: Text -> BotApp (IO Model) (ChatId, Action)
+rolesBot botName =
   BotApp
     { botInitialModel = return initialModel,
       botAction = flip updateToAction,
@@ -108,12 +107,20 @@ rolesBot =
       parseUpdate $
         addChatId $
           Help <$ command "help"
+            <|> Help <$ command (withBotName "help")
             <|> AddRole <$> command' "role_add"
+            <|> AddRole <$> command' (withBotName "role_add")
             <|> RemoveRole <$> command' "role_remove"
+            <|> RemoveRole <$> command' (withBotName "role_remove")
             <|> CreateRole <$> command "role_create"
+            <|> CreateRole <$> command (withBotName "role_create")
             <|> DeleteRole <$> command "role_delete"
-            <|> ListRoles <$ command "role_list"
+            <|> DeleteRole <$> command (withBotName "role_delete")
+            <|> ListRoles <$ command "roles"
+            <|> ListRoles <$ command (withBotName "roles")
             <|> Msg <$> message
+    withBotName :: Text -> Text
+    withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, Data.Text.pack "@", botName]
 
     handleAction :: (ChatId, Action) -> IO Model -> Eff (ChatId, Action) (IO Model)
     handleAction (chatId, action) model =
@@ -177,7 +184,7 @@ rolesBot =
               "`/role_delete <role_name>*` deletes roles",
               "`/role_add <role_name> <mention>*` adds role to the mentioned users",
               "`/role_remove <role_name> <mention>*` removes role from the mentioned users",
-              "`/role_list` list roles and assigned people"
+              "`/roles` list roles and assigned people"
             ]
         handleMention :: Text -> MessageId -> IO Model -> BotM ReplyMessageM
         handleMention t mid mM = liftIO $ getMessage <$> mM
@@ -310,12 +317,12 @@ parseMentions msg =
 substring :: Int -> Int -> Text -> Text
 substring offset len = Data.Text.take len . Data.Text.drop offset
 
-run :: Token -> IO ()
-run token = do
+run :: Token -> Text -> IO ()
+run token name = do
   env <- defaultTelegramClientEnv token
-  startBot_ (conversationBot updateChatId rolesBot) env
+  startBot_ (conversationBot updateChatId $ rolesBot name) env
 
 main :: IO ()
 main = do
   createSerializedFolder
-  run botKey
+  run botKey botUsername
