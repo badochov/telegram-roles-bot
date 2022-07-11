@@ -1,4 +1,3 @@
--- TODO improve role_list
 -- TODO /help@niepowazne_reakcje_bot
 -- TODO print ppl in role after role_add / role_remove
 -- TODO role_alias
@@ -29,7 +28,6 @@ import Secret (botKey)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
 import Telegram.Bot.Simple.UpdateParser
-import Text.Pretty.Simple (pShowNoColor)
 
 data Action
   = Help
@@ -171,7 +169,7 @@ rolesBot =
         handleListRoles :: IO Model -> Eff (ChatId, Action) (IO Model)
         handleListRoles m = m <# liftIO listRoleMsg
           where
-            listRoleMsg = Data.Text.Lazy.toStrict . pShowNoColor . roles <$> m
+            listRoleMsg = pSprintRoles <$> m
         saveModel :: IO Model -> IO Model
         saveModel m = m >>= saveToDisk chatId >> m
         helpMessage =

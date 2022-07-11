@@ -40,7 +40,6 @@ library
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , pretty-simple ==4.0.0.0
     , telegram-bot-simple ==0.4.5
     , text ==1.2.5.0
     , unordered-containers ==0.2.17.0
@@ -64,7 +63,6 @@ executable telegram-roles-bot-exe
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , pretty-simple ==4.0.0.0
     , telegram-bot-simple ==0.4.5
     , telegram-roles-bot
     , text ==1.2.5.0
@@ -89,7 +87,6 @@ test-suite telegram-roles-bot-test
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , pretty-simple ==4.0.0.0
     , telegram-bot-simple ==0.4.5
     , telegram-roles-bot
     , text ==1.2.5.0

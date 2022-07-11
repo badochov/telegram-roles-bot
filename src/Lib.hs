@@ -13,7 +13,8 @@ import qualified Data.HashMap.Internal.Strict as HashMap
 import Data.Serialize (Serialize, decode, encode)
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text)
+import qualified Data.Text as Text
 import GHC.Generics (Generic)
 import System.AtomicWrite.Writer.ByteString
 import System.Directory
@@ -63,12 +64,12 @@ serialize :: Model -> ByteString
 serialize Model {roles} = encode $ toSerializedRoles roles
   where
     toSerializedRoles :: Roles -> SerializedRoles
-    toSerializedRoles rs = SerializedRoles $ map (Data.Bifunctor.bimap unpack serializeMentions) $ HashMap.toList rs
+    toSerializedRoles rs = SerializedRoles $ map (Data.Bifunctor.bimap Text.unpack serializeMentions) $ HashMap.toList rs
     serializeMentions :: Set Mention -> [MentionSerialized]
     serializeMentions mentions = map serializeMention $ Set.toList mentions
     serializeMention :: Mention -> MentionSerialized
-    serializeMention (Username name) = MentionSerialized (Data.Text.unpack name, Nothing)
-    serializeMention (TelegramId (UserId uid) name) = MentionSerialized (Data.Text.unpack name, Just uid)
+    serializeMention (Username name) = MentionSerialized (Text.unpack name, Nothing)
+    serializeMention (TelegramId (UserId uid) name) = MentionSerialized (Text.unpack name, Just uid)
 
 deserialize :: ByteString -> Either String Model
 deserialize serialized = fromSerializedRoles <$> decode serialized
@@ -76,11 +77,11 @@ deserialize serialized = fromSerializedRoles <$> decode serialized
     fromSerializedRoles :: SerializedRoles -> Model
     fromSerializedRoles (SerializedRoles sr) = Model {roles = roles, loadedFromDisk = True}
       where
-        roles = HashMap.fromList $ map (Data.Bifunctor.bimap pack deserializeMentions) sr
+        roles = HashMap.fromList $ map (Data.Bifunctor.bimap Text.pack deserializeMentions) sr
         deserializeMentions ms = Set.fromList $ map deserializeMention ms
         deserializeMention :: MentionSerialized -> Mention
-        deserializeMention (MentionSerialized (name, Nothing)) = Username $ Data.Text.pack name
-        deserializeMention (MentionSerialized (name, Just tid)) = TelegramId (UserId tid) (Data.Text.pack name)
+        deserializeMention (MentionSerialized (name, Nothing)) = Username $ Text.pack name
+        deserializeMention (MentionSerialized (name, Just tid)) = TelegramId (UserId tid) (Text.pack name)
 
 defaultModel :: Model
 defaultModel =
@@ -115,3 +116,13 @@ createSerializedFolder =
 
 getFileName :: ChatId -> String
 getFileName (ChatId cid) = show cid
+
+pSprintRoles :: Model -> Text
+pSprintRoles Model {roles} = Text.unlines $ map pSprintRole $ HashMap.toList roles
+
+pSprintRole :: (Role, Set Mention) -> Text
+pSprintRole (role, mentions) = Text.unlines $ role : map (pSprintMention $ Text.pack "  ") (Set.toList mentions)
+
+pSprintMention :: Text -> Mention -> Text
+pSprintMention prefix (Username name) = Text.append prefix name
+pSprintMention prefix (TelegramId _ name) = Text.append prefix name
