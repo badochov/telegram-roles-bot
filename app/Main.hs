@@ -13,10 +13,10 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
+import Secret (botKey)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
 import Telegram.Bot.Simple.UpdateParser
-import Secret (botKey)
 
 type Role = Text
 
@@ -29,7 +29,7 @@ instance Ord Mention where
   (<=) (Username _) (TelegramId _ _) = True
   (<=) (TelegramId _ _) (Username _) = False
   (<=) (Username a) (Username b) = a <= b
-  (<=) (TelegramId (UserId a) _ ) (TelegramId (UserId b) _) = a <= b
+  (<=) (TelegramId (UserId a) _) (TelegramId (UserId b) _) = a <= b
 
 newtype Model = Model
   { roles :: HashMap Role (Set Mention)
@@ -47,7 +47,7 @@ data Action
   | RemoveRole (Text, [MessageEntity])
   | CreateRole Text
   | ListRoles
-  | Mention Text
+  | Mention (Text,MessageId)
   deriving (Show)
 
 toInt :: UserId -> Int
@@ -66,11 +66,18 @@ command' name = do
         pure (t, ents)
     _ -> fail "not that command"
 
-mention :: UpdateParser Text
+messageId :: UpdateParser MessageId
+messageId = UpdateParser (updateMessage >=> mmId)
+  where
+  mmId :: Message -> Maybe MessageId
+  mmId = Just . messageMessageId
+
+mention :: UpdateParser (Text, MessageId)
 mention = do
   t <- text
+  mid <- messageId
   if "@" `Data.Text.isPrefixOf` t && length (Data.Text.words t) == 1
-    then pure t
+    then pure (t, mid)
     else fail "not mention"
 
 rolesBot :: BotApp Model Action
@@ -98,57 +105,88 @@ rolesBot =
         model <# do
           replyText helpMessage
       AddRole (msg, ents) ->
-        addRole msg ents model <# do
-          pure ()
+        case validateAddRole msg model of
+          Nothing -> addRole msg ents model <# pure ()
+          Just err -> model <# replyText err
       RemoveRole (msg, ents) ->
-        removeRole msg ents model <# do
-          pure ()
-      CreateRole createRoleText ->
-        createRole createRoleText model <# do
-          replyText createRoleText
+        case validateRemoveRole msg model of
+          Nothing -> removeRole msg ents model <# pure ()
+          Just err -> model <# replyText err
+      CreateRole msg ->
+        case validateCreateRole msg model of
+          Nothing -> createRole msg model <# pure ()
+          Just err -> model <# replyText err
       ListRoles ->
         model <# do
           replyText $ Data.Text.pack (show $ roles model)
-      Mention t ->
+      Mention (t, mid) ->
         model <# do
-          handleMention t model
+          handleMention t mid model
 
     helpMessage =
       Data.Text.unlines
         []
 
-handleMention :: Text -> Model -> BotM ()
-handleMention t Model {roles} =
+handleMention :: Text -> MessageId -> Model -> BotM ()
+handleMention t mid Model {roles} =
   case HashMap.lookup (getMention t) roles of
     Just users -> reply $ createMsg users
     Nothing -> pure ()
   where
     createMsg users =
       let (msgText, ents) = createMsgTextAndEntities users
-      in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing Nothing Nothing Nothing
+       in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
     createMsgTextAndEntities users = Set.foldl createMsg' (Data.Text.empty, []) users
     createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
     createMsg' (txt, e) (Username username) = (addToBack txt username, e)
-    createMsg' (txt, e) u@(TelegramId _ name) = let offset = Data.Text.length txt + 1
-                                                    nT = addToBack txt name
-                                                    ent = createEntity offset u
-                                                    in (nT, ent: e)
-    createEntity offset u@(TelegramId _ name) = let len = Data.Text.length name in
-      MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing
+    createMsg' (txt, e) u@(TelegramId _ name) =
+      let offset = Data.Text.length txt + 1
+          nT = addToBack txt name
+          ent = createEntity offset u
+       in (nT, ent : e)
+    createEntity offset u@(TelegramId _ name) =
+      let len = Data.Text.length name
+       in MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing
     createUser (TelegramId telegramId name) = User telegramId False name Nothing Nothing Nothing Nothing Nothing Nothing
     addToBack start back = Data.Text.intercalate (Data.Text.pack " ") [start, back]
     getMention = Data.Text.drop 1 . head . Data.Text.words
 
+validateAddRole :: Text -> Model -> Maybe Text
+validateAddRole t Model {roles} =
+  let role = getRole t
+   in if HashMap.member role roles
+        then Nothing
+        else Just (Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", role, Data.Text.pack "` doesn't exist!"])
+
+validateCreateRole :: Text -> Model -> Maybe Text
+validateCreateRole t Model {roles} =
+  let parts = Data.Text.words t
+      checkIfExists acc name =
+        if HashMap.member name roles
+        then Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", name, Data.Text.pack "` exists!"] : acc
+        else acc
+      errors = foldl checkIfExists [] parts
+  in
+    case errors of
+      [] -> Nothing
+      _ -> Just $ Data.Text.intercalate (Data.Text.pack "\n") errors
+
+validateRemoveRole :: Text -> Model -> Maybe Text
+validateRemoveRole = validateAddRole
+
+getRole :: Text -> Text
+getRole = head . tail . Data.Text.words
+
 addRole :: Text -> [MessageEntity] -> Model -> Model
 addRole msg ents =
   let users = parseMentions msg ents
-      role = head . tail $ Data.Text.words msg
+      role = getRole msg
    in addToRole role users
 
 removeRole :: Text -> [MessageEntity] -> Model -> Model
 removeRole msg ents model =
   let users = parseMentions msg ents
-      role = head . tail $ Data.Text.words msg
+      role = getRole msg
    in removeFromRole role users model
 
 createRole :: Text -> Model -> Model
