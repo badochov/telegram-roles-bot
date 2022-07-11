@@ -285,9 +285,12 @@ removeFromRole _ [] model = model
 removeFromRole role (u : t) m@Model {roles} =
   removeFromRole role t model
   where
-    model = m {roles = HashMap.alter alterFn role roles}
+    model = m {roles = newRoles}
+    newRoles = HashMap.alter alterFn role roles
     alterFn Nothing = Nothing
-    alterFn (Just x) = Just $ Set.delete u x
+    alterFn (Just x) =
+      let r = Set.delete u x
+       in if Set.null r then Nothing else Just r
 
 parseMentions :: Text -> [MessageEntity] -> [Mention]
 parseMentions msg =
