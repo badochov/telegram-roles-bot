@@ -1,3 +1,11 @@
+-- TODO improve role_list
+-- TODO do not mention in role_list
+-- TODO /help@niepowazne_reakcje_bot
+-- TODO print ppl in role after role_add / role_remove
+-- TODO role_alias
+-- TODO always mention(not only if its first and only word
+-- TODO cooldown
+-- TODO investigate perf issues
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -28,6 +36,7 @@ data Action
   = Help
   | AddRole (Text, [MessageEntity])
   | RemoveRole (Text, [MessageEntity])
+  | DeleteRole Text
   | CreateRole Text
   | ListRoles
   | Mention (Text, MessageId)
@@ -109,6 +118,7 @@ rolesBot =
             <|> AddRole <$> command' "role_add"
             <|> RemoveRole <$> command' "role_remove"
             <|> CreateRole <$> command "role_create"
+            <|> DeleteRole <$> command "role_delete"
             <|> ListRoles <$ command "role_list"
 
     handleAction :: (ChatId, Action) -> IO Model -> Eff (ChatId, Action) (IO Model)
@@ -121,6 +131,7 @@ rolesBot =
               AddRole (msg, ents) -> handleAddRole msg ents m
               RemoveRole (msg, ents) -> handleRemoveRole msg ents m
               CreateRole msg -> handleCreateRole msg m
+              DeleteRole msg -> handleDeleteRole msg m
               ListRoles -> handleListRoles m
               Mention (t, mid) ->
                 m <# do
@@ -150,6 +161,14 @@ rolesBot =
             newModelF Nothing = createRole msg <$> m
             newModelF (Just _) = m
             botM = liftIO $ TextM <$> validation
+        handleDeleteRole :: Text -> IO Model -> Eff (ChatId, Action) (IO Model)
+        handleDeleteRole msg m = saveModel newModel <# botM
+          where
+            validation = validateDeleteRole msg <$> m
+            newModel = validation >>= newModelF
+            newModelF Nothing = deleteRole msg <$> m
+            newModelF (Just _) = m
+            botM = liftIO $ TextM <$> validation
         handleListRoles :: IO Model -> Eff (ChatId, Action) (IO Model)
         handleListRoles m = m <# liftIO listRoleMsg
           where
@@ -160,7 +179,8 @@ rolesBot =
           Data.Text.unlines
             [ "This bot brings roles features to your Telegram chat!",
               "",
-              "`/role_create <role_name>*` creates role",
+              "`/role_create <role_name>*` creates roles",
+              "`/role_delete <role_name>*` deletes roles",
               "`/role_add <role_name> <mention>*` adds role to the mentioned users",
               "`/role_remove <role_name> <mention>*` removes role from the mentioned users",
               "`/role_list` list roles and assigned people"
@@ -211,6 +231,18 @@ validateCreateRole t Model {roles} =
         [] -> Nothing
         _ -> Just $ Data.Text.unlines errors
 
+validateDeleteRole :: Text -> Model -> Maybe Text
+validateDeleteRole t Model {roles} =
+  let parts = Data.Text.words t
+      checkIfExists acc name =
+        if HashMap.member name roles
+          then acc
+          else Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", name, Data.Text.pack "` doesn't exists!"] : acc
+      errors = foldl checkIfExists [] parts
+   in case errors of
+        [] -> Nothing
+        _ -> Just $ Data.Text.unlines errors
+
 validateRemoveRole :: Text -> Model -> Maybe Text
 validateRemoveRole = validateAddRole
 
@@ -234,6 +266,12 @@ createRole rolesMsg model =
   let parts = Data.Text.words rolesMsg
       addPart m@Model {roles} name = m {roles = HashMap.insertWith (\_ x -> x) name Set.empty roles}
    in foldl addPart model parts
+
+deleteRole :: Text -> Model -> Model
+deleteRole rolesMsg model =
+  let parts = Data.Text.words rolesMsg
+      removePart m@Model {roles} name = m {roles = HashMap.delete name roles}
+   in foldl removePart model parts
 
 addToRole :: Role -> [Mention] -> Model -> Model
 addToRole role users model@Model {roles} =
