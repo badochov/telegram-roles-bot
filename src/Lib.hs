@@ -109,5 +109,9 @@ getFilePath cid = joinPath [serializedFolderName, getFileName cid]
 serializedFolderName :: String
 serializedFolderName = "serialized"
 
+createSerializedFolder :: IO ()
+createSerializedFolder =
+  createDirectoryIfMissing True serializedFolderName
+
 getFileName :: ChatId -> String
 getFileName (ChatId cid) = show cid

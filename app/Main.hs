@@ -160,7 +160,7 @@ rolesBot =
           Data.Text.unlines
             [ "This bot brings roles features to your Telegram chat!",
               "",
-              "`/role_create <role_name>*` creates roles",
+              "`/role_create <role_name>*` creates role",
               "`/role_add <role_name> <mention>*` adds role to the mentioned users",
               "`/role_remove <role_name> <mention>*` removes role from the mentioned users",
               "`/role_list` list roles and assigned people"
@@ -279,4 +279,5 @@ run token = do
 
 main :: IO ()
 main = do
+  createSerializedFolder
   run botKey

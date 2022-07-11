@@ -4,3 +4,4 @@
 app/Secret.hs
 /.idea
 /serialized
+/build
