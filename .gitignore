@@ -3,3 +3,4 @@
 /out
 app/Secret.hs
 /.idea
+/serialized
