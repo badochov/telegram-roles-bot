@@ -1,5 +1,4 @@
 -- TODO improve role_list
--- TODO do not mention in role_list
 -- TODO /help@niepowazne_reakcje_bot
 -- TODO print ppl in role after role_add / role_remove
 -- TODO role_alias
@@ -199,7 +198,7 @@ rolesBot =
                in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
             createMsgTextAndEntities users = Set.foldl createMsg' (Data.Text.empty, []) users
             createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
-            createMsg' (txt, e) (Username username) = (addToBack txt username, e)
+            createMsg' (txt, e) (Username username) = (addToBack txt ("@" `Data.Text.append` username), e)
             createMsg' (txt, e) u@(TelegramId _ name) =
               let offset = Data.Text.length txt + 1
                   nT = addToBack txt name
@@ -303,7 +302,7 @@ parseMentions msg =
             Just user -> TelegramId (userId user) username : acc
         _ -> acc
       where
-        offset = messageEntityOffset ent
+        offset = messageEntityOffset ent + 1 -- +1 to not include @
         len = messageEntityLength ent
         username = substring offset len msg
 
