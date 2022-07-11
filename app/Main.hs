@@ -93,6 +93,9 @@ message = do
 addChatId :: UpdateParser a -> UpdateParser (ChatId, a)
 addChatId m = m >>= (\a -> fmap (,a) messageChatId)
 
+mentionPrefix :: Text
+mentionPrefix = "@"
+
 rolesBot :: Text -> BotApp (IO Model) (ChatId, Action)
 rolesBot botName =
   BotApp
@@ -120,7 +123,7 @@ rolesBot botName =
             <|> ListRoles <$ command (withBotName "roles")
             <|> Msg <$> message
     withBotName :: Text -> Text
-    withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, Data.Text.pack "@", botName]
+    withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, mentionPrefix, botName]
 
     handleAction :: (ChatId, Action) -> IO Model -> Eff (ChatId, Action) (IO Model)
     handleAction (chatId, action) model =
@@ -195,7 +198,7 @@ rolesBot botName =
               [] -> Nothing
               tM -> Just $ foldl (foldTextMention m) Set.empty tM
             textMentions = filter isMention $ Data.Text.words t
-            isMention txt = Data.Text.take 1 txt == Data.Text.pack "@"
+            isMention txt = Data.Text.take 1 txt == mentionPrefix
             foldTextMention Model {roles} acc mention = case HashMap.lookup (Data.Text.drop 1 mention) roles of
               Nothing -> acc
               Just x -> Set.union x acc
@@ -204,7 +207,7 @@ rolesBot botName =
                in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
             createMsgTextAndEntities users = Set.foldl createMsg' (Data.Text.empty, []) users
             createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
-            createMsg' (txt, e) (Username username) = (addToBack txt ("@" `Data.Text.append` username), e)
+            createMsg' (txt, e) (Username username) = (addToBack txt (mentionPrefix `Data.Text.append` username), e)
             createMsg' (txt, e) u@(TelegramId _ name) =
               let offset = Data.Text.length txt + 1
                   nT = addToBack txt name
@@ -217,11 +220,12 @@ rolesBot botName =
             addToBack start back = Data.Text.intercalate (Data.Text.pack " ") [start, back]
 
 validateAddRole :: Text -> Model -> Maybe Text
-validateAddRole t Model {roles} =
-  let role = getRole t
-   in if HashMap.member role roles
-        then Nothing
-        else Just (Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", role, Data.Text.pack "` doesn't exist!"])
+validateAddRole t Model {roles} = case getRole t of
+  Nothing -> Just "A role must be proved to /role_add"
+  Just role ->
+    if HashMap.member role roles
+      then Nothing
+      else Just (Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", role, Data.Text.pack "` doesn't exist!"])
 
 validateCreateRole :: Text -> Model -> Maybe Text
 validateCreateRole t Model {roles} =
@@ -248,22 +252,31 @@ validateDeleteRole t Model {roles} =
         _ -> Just $ Data.Text.unlines errors
 
 validateRemoveRole :: Text -> Model -> Maybe Text
-validateRemoveRole = validateAddRole
+validateRemoveRole t Model {roles} = case getRole t of
+  Nothing -> Just "A role must be proved to /role_remove"
+  Just role ->
+    if HashMap.member role roles
+      then Nothing
+      else Just (Data.Text.intercalate Data.Text.empty [Data.Text.pack "Role: `", role, Data.Text.pack "` doesn't exist!"])
 
-getRole :: Text -> Text
-getRole = head . tail . Data.Text.words
+getRole :: Text -> Maybe Text
+getRole t = case Data.Text.words t of
+  (_ : (role : _)) -> Just role
+  _ -> Nothing
 
 addRole :: Text -> [MessageEntity] -> Model -> Model
-addRole msg ents =
+addRole msg ents model=
   let users = parseMentions msg ents
-      role = getRole msg
-   in addToRole role users
+      in case getRole msg of
+        Nothing -> model
+        Just role -> addToRole role users model
 
 removeRole :: Text -> [MessageEntity] -> Model -> Model
-removeRole msg ents =
+removeRole msg ents model =
   let users = parseMentions msg ents
-      role = getRole msg
-   in removeFromRole role users
+      in case getRole msg of
+        Nothing -> model
+        Just role -> removeFromRole role users model
 
 createRole :: Text -> Model -> Model
 createRole rolesMsg model =
@@ -310,9 +323,13 @@ parseMentions msg =
             Just user -> TelegramId (userId user) username : acc
         _ -> acc
       where
-        offset = messageEntityOffset ent + 1 -- +1 to not include @
+        offset = messageEntityOffset ent
         len = messageEntityLength ent
-        username = substring offset len msg
+        username =
+          let raw = substring offset len msg
+           in if Data.Text.take 1 raw == mentionPrefix
+                then Data.Text.drop 1 raw
+                else raw
 
 substring :: Int -> Int -> Text -> Text
 substring offset len = Data.Text.take len . Data.Text.drop offset
