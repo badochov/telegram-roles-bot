@@ -211,7 +211,7 @@ rolesBot botName =
               Just x -> Set.union x acc
             createMsg users =
               let (msgText, ents) = createMsgTextAndEntities users
-               in ReplyMessage msgText Nothing (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
+               in ReplyMessage msgText (Just MarkdownV2) (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
             createMsgTextAndEntities users = Set.foldl createMsg' (Data.Text.empty, []) users
             createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
             createMsg' (txt, e) (Username username) = (addToBack txt (mentionPrefix `Data.Text.append` username), e)
@@ -228,7 +228,7 @@ rolesBot botName =
 
 validateAddRole :: Text -> Model -> Maybe Text
 validateAddRole t Model {roles} = case getRole t of
-  Nothing -> Just "A role must be proved to /role_add"
+  Nothing -> Just "A role must be provided to /role_add"
   Just role ->
     if HashMap.member role roles
       then Nothing
@@ -260,7 +260,7 @@ validateDeleteRole t Model {roles} =
 
 validateRemoveRole :: Text -> Model -> Maybe Text
 validateRemoveRole t Model {roles} = case getRole t of
-  Nothing -> Just "A role must be proved to /role_remove"
+  Nothing -> Just "A role must be provided to /role_remove"
   Just role ->
     if HashMap.member role roles
       then Nothing
