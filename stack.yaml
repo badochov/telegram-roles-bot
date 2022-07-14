@@ -5,4 +5,4 @@ packages:
 - .
 extra-deps:
 - git: https://github.com/badochov/telegram-bot-simple.git
-  commit: c7ab4eb4a066d7397aaf670c7e05cc8acca9a3a2
+  commit: b970f1cc60fe3ee32042da97bfa37c7674470423

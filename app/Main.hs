@@ -25,10 +25,10 @@ import qualified Data.Text
 import Data.Text.Lazy (toStrict)
 import GHC.Generics (Generic)
 import Lib
-import Secret (botKey, botUsername)
+import Secret (botKey, botUsername, botWebhookIp)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
-import Telegram.Bot.API.WebHooks
+import Telegram.Bot.API.Webhook
 import Telegram.Bot.Simple.UpdateParser
 import Network.Wai.Handler.Warp (setPort, setHost, defaultSettings)
 import Network.Wai.Handler.WarpTLS (tlsSettings)
@@ -344,13 +344,13 @@ substring offset len = Data.Text.take len . Data.Text.drop offset
 run :: Token -> Text -> IO ()
 run token name = do
   env <- defaultTelegramClientEnv token
-  res <- startBotWebHooks (conversationBot updateChatId $ rolesBot name) config env
+  res <- startBotWebhook (conversationBot updateChatId $ rolesBot name) config env
   print res
   where
     tlsOpts = (tlsSettings "cert.pem" "key.pem")
     warpOpts = setPort 8443 defaultSettings
     certFile = Just $ InputFile "cert.pem" "application/x-pem-file"
-    url = "https://" ++ ip ++ ":8443"
+    url = "https://" ++ botWebhookIp ++ ":8443"
     config = WebhookConfig
                { webhookConfigTlsSettings       = tlsOpts,
                  webhookConfigTlsWarpSettings   = warpOpts,
