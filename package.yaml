@@ -1,8 +1,8 @@
 name: telegram-roles-bot
 version: 0.1.0.0
 github: "Github username here/telegram-roles-bot"
-license: BSD3
-author: "Author name here"
+license: MIT
+author: "Hubert Badocha"
 maintainer: "Author email here"
 copyright: "2019 Author name here"
 
@@ -10,18 +10,13 @@ extra-source-files:
   - README.md
   - ChangeLog.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            App category here
+synopsis: Bring roles to your telegram group chat
+category: Web
 
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description: Please see the README on GitHub at <https://github.com/Github username here/telegram-roles-bot#readme>
+description: Please see the README on GitHub at https://github.com/badochov/telegram-bot-simple.git#readme
 
 dependencies:
   - base >= 4.7 && < 5
-  - telegram-bot-simple == 0.4.5
   - text == 1.2.5.0
   - unordered-containers == 0.2.17.0
   - containers == 0.6.4.1
@@ -32,6 +27,9 @@ dependencies:
   - atomic-write == 0.2.0.7
   - bytestring == 0.10.12.1
   - filepath == 1.4.2.1
+  - telegram-bot-simple
+  - warp
+  - warp-tls
 
 library:
   source-dirs: src

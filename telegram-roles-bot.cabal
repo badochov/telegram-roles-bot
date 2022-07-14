@@ -6,13 +6,15 @@ cabal-version: 1.12
 
 name:           telegram-roles-bot
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/Github username here/telegram-roles-bot#readme>
+synopsis:       Bring roles to your telegram group chat
+description:    Please see the README on GitHub at https://github.com/badochov/telegram-bot-simple.git#readme
+category:       Web
 homepage:       https://github.com/Github username here/telegram-roles-bot#readme
 bug-reports:    https://github.com/Github username here/telegram-roles-bot/issues
-author:         Author name here
+author:         Hubert Badocha
 maintainer:     Author email here
 copyright:      2019 Author name here
-license:        BSD3
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -40,9 +42,11 @@ library
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , telegram-bot-simple ==0.4.5
+    , telegram-bot-simple
     , text ==1.2.5.0
     , unordered-containers ==0.2.17.0
+    , warp
+    , warp-tls
   default-language: Haskell2010
 
 executable telegram-roles-bot-exe
@@ -63,10 +67,12 @@ executable telegram-roles-bot-exe
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , telegram-bot-simple ==0.4.5
+    , telegram-bot-simple
     , telegram-roles-bot
     , text ==1.2.5.0
     , unordered-containers ==0.2.17.0
+    , warp
+    , warp-tls
   default-language: Haskell2010
 
 test-suite telegram-roles-bot-test
@@ -87,8 +93,10 @@ test-suite telegram-roles-bot-test
     , filepath ==1.4.2.1
     , hashable ==1.3.5.0
     , mtl ==2.2.2
-    , telegram-bot-simple ==0.4.5
+    , telegram-bot-simple
     , telegram-roles-bot
     , text ==1.2.5.0
     , unordered-containers ==0.2.17.0
+    , warp
+    , warp-tls
   default-language: Haskell2010

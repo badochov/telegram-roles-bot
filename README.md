@@ -6,7 +6,7 @@ Telegram bot bringing roles feature to your telegram chat
 
 ## Build
 1. Copy `app/Secret.hs.tmpl` to `app/Secret.hs`
-2. Fill botKey and botUserName in `app/Secret.hs`
+2. Fill botKey, botUserName, botWebhookIp in `app/Secret.hs`
 3. `$ stack --local-bin-path <path/to/dest/folder> install`
 
 ## Run

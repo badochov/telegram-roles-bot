@@ -25,7 +25,11 @@ import Lib
 import Secret (botKey, botUsername)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
+import Telegram.Bot.API.WebHooks
 import Telegram.Bot.Simple.UpdateParser
+import Network.Wai.Handler.Warp (setPort, setHost, defaultSettings)
+import Network.Wai.Handler.WarpTLS (tlsSettings)
+
 
 data Action
   = Help
@@ -337,7 +341,28 @@ substring offset len = Data.Text.take len . Data.Text.drop offset
 run :: Token -> Text -> IO ()
 run token name = do
   env <- defaultTelegramClientEnv token
-  startBot_ (conversationBot updateChatId $ rolesBot name) env
+  res <- startBotWebHooks (conversationBot updateChatId $ rolesBot name) config env
+  print res
+  where
+    tlsOpts = (tlsSettings "cert.pem" "key.pem")
+    warpOpts = setPort 8443 defaultSettings
+    certFile = Just $ InputFile "cert.pem" "application/x-pem-file"
+    url = "https://" ++ ip ++ ":8443"
+    config = WebhookConfig
+               { webhookConfigTlsSettings       = tlsOpts,
+                 webhookConfigTlsWarpSettings   = warpOpts,
+                 webhookConfigSetWebhookRequest = requestData
+               } 
+    requestData =
+      SetWebhookRequest
+        { setWebhookUrl                 = url,
+          setWebhookCertificate         = certFile,
+          setWebhookIpAddress           = Nothing,
+          setWebhookMaxConnections      = Nothing,
+          setWebhookAllowedUpdates      = Just ["message"],
+          setWebhookDropPendingUpdates  = Nothing,
+          setWebhookSecretToken         = Nothing
+        }
 
 main :: IO ()
 main = do
