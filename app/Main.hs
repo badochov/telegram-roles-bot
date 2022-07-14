@@ -1,7 +1,8 @@
 -- TODO print ppl in role after role_add / role_remove
 -- TODO role_alias
 -- TODO cooldown
--- TODO investigate perf issues
+-- TODO fix random crashes
+-- TODO add button to remove /roles output
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
