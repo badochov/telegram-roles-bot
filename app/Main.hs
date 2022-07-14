@@ -3,6 +3,8 @@
 -- TODO cooldown
 -- TODO fix random crashes
 -- TODO add button to remove /roles output
+-- TODO write message on roles even if it's empty
+
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
