@@ -1,19 +1,19 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           telegram-roles-bot
-version:        0.1.0.0
+version:        0.2.0.0
 synopsis:       Bring roles to your telegram group chat
-description:    Please see the README on GitHub at https://github.com/badochov/telegram-bot-simple.git#readme
+description:    Please see the README on GitHub at https://github.com/badochov/telegram-roles-bot.git#README.md
 category:       Web
-homepage:       https://github.com/Github username here/telegram-roles-bot#readme
-bug-reports:    https://github.com/Github username here/telegram-roles-bot/issues
+homepage:       https://github.com/badochov/telegram-roles-bot#readme
+bug-reports:    https://github.com/badochov/telegram-roles-bot/issues
 author:         Hubert Badocha
-maintainer:     Author email here
-copyright:      2019 Author name here
+maintainer:     badocha.hubert@gmail.com
+copyright:      2023 Hubert Badocha
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/Github username here/telegram-roles-bot
+  location: https://github.com/badochov/telegram-roles-bot
 
 library
   exposed-modules:
@@ -33,20 +33,18 @@ library
   hs-source-dirs:
       src
   build-depends:
-      atomic-write ==0.2.0.7
-    , base >=4.7 && <5
-    , bytestring ==0.10.12.1
-    , cereal ==0.5.8.2
-    , containers ==0.6.4.1
-    , directory ==1.3.6.2
-    , filepath ==1.4.2.1
-    , hashable ==1.3.5.0
-    , mtl ==2.2.2
-    , telegram-bot-simple
-    , text ==1.2.5.0
-    , unordered-containers ==0.2.17.0
-    , warp
-    , warp-tls
+      atomic-write
+    , base >=4.9 && <5
+    , bytestring
+    , cereal
+    , containers
+    , directory
+    , filepath
+    , hashable
+    , mtl
+    , telegram-bot-simple ==0.6.1
+    , text
+    , unordered-containers
   default-language: Haskell2010
 
 executable telegram-roles-bot-exe
@@ -58,45 +56,17 @@ executable telegram-roles-bot-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      atomic-write ==0.2.0.7
-    , base >=4.7 && <5
-    , bytestring ==0.10.12.1
-    , cereal ==0.5.8.2
-    , containers ==0.6.4.1
-    , directory ==1.3.6.2
-    , filepath ==1.4.2.1
-    , hashable ==1.3.5.0
-    , mtl ==2.2.2
-    , telegram-bot-simple
+      atomic-write
+    , base >=4.9 && <5
+    , bytestring
+    , cereal
+    , containers
+    , directory
+    , filepath
+    , hashable
+    , mtl
+    , telegram-bot-simple ==0.6.1
     , telegram-roles-bot
-    , text ==1.2.5.0
-    , unordered-containers ==0.2.17.0
-    , warp
-    , warp-tls
-  default-language: Haskell2010
-
-test-suite telegram-roles-bot-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_telegram_roles_bot
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      atomic-write ==0.2.0.7
-    , base >=4.7 && <5
-    , bytestring ==0.10.12.1
-    , cereal ==0.5.8.2
-    , containers ==0.6.4.1
-    , directory ==1.3.6.2
-    , filepath ==1.4.2.1
-    , hashable ==1.3.5.0
-    , mtl ==2.2.2
-    , telegram-bot-simple
-    , telegram-roles-bot
-    , text ==1.2.5.0
-    , unordered-containers ==0.2.17.0
-    , warp
-    , warp-tls
+    , text
+    , unordered-containers
   default-language: Haskell2010

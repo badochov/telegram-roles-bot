@@ -1,10 +1,10 @@
 name: telegram-roles-bot
-version: 0.1.0.0
-github: "Github username here/telegram-roles-bot"
+version: 0.2.0.0
+github: "badochov/telegram-roles-bot"
 license: MIT
 author: "Hubert Badocha"
-maintainer: "Author email here"
-copyright: "2019 Author name here"
+maintainer: "badocha.hubert@gmail.com"
+copyright: "2023 Hubert Badocha"
 
 extra-source-files:
   - README.md
@@ -13,23 +13,21 @@ extra-source-files:
 synopsis: Bring roles to your telegram group chat
 category: Web
 
-description: Please see the README on GitHub at https://github.com/badochov/telegram-bot-simple.git#readme
+description: Please see the README on GitHub at https://github.com/badochov/telegram-roles-bot.git#README.md
 
 dependencies:
-  - base >= 4.7 && < 5
-  - text == 1.2.5.0
-  - unordered-containers == 0.2.17.0
-  - containers == 0.6.4.1
-  - mtl == 2.2.2
-  - hashable == 1.3.5.0
-  - cereal == 0.5.8.2
-  - directory == 1.3.6.2
-  - atomic-write == 0.2.0.7
-  - bytestring == 0.10.12.1
-  - filepath == 1.4.2.1
-  - telegram-bot-simple
-  - warp
-  - warp-tls
+  - base >= 4.9 && < 5
+  - text
+  - unordered-containers
+  - containers
+  - mtl
+  - hashable
+  - cereal
+  - directory
+  - atomic-write
+  - bytestring
+  - filepath
+  - telegram-bot-simple == 0.6.1
 
 library:
   source-dirs: src
@@ -38,17 +36,6 @@ executables:
   telegram-roles-bot-exe:
     main: Main.hs
     source-dirs: app
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - telegram-roles-bot
-
-tests:
-  telegram-roles-bot-test:
-    main: Spec.hs
-    source-dirs: test
     ghc-options:
       - -threaded
       - -rtsopts

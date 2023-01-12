@@ -1,8 +1,5 @@
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/15.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/5.yaml
 
 packages:
 - .
-extra-deps:
-- git: https://github.com/badochov/telegram-bot-simple.git
-  commit: b970f1cc60fe3ee32042da97bfa37c7674470423

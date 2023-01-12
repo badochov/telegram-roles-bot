@@ -3,22 +3,11 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    name: telegram-bot-simple
-    version: 0.5.2
-    git: https://github.com/badochov/telegram-bot-simple.git
-    pantry-tree:
-      size: 3253
-      sha256: bd9541140e0a7a9bfb1cc695f7d318a95d9103a2cf12325cd3d28adfda8ac75b
-    commit: b970f1cc60fe3ee32042da97bfa37c7674470423
-  original:
-    git: https://github.com/badochov/telegram-bot-simple.git
-    commit: b970f1cc60fe3ee32042da97bfa37c7674470423
+packages: []
 snapshots:
 - completed:
-    size: 618952
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/15.yaml
-    sha256: 82e5ccb47b068521de4055034e8aa278eab430b586881d9cc29ba8b382ce3253
+    sha256: a684cdbdf9304b325a503e0fe1d9648e9c18155ce4c7cfebbe8a7f93674e6295
+    size: 649106
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/5.yaml
   original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/15.yaml
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/5.yaml

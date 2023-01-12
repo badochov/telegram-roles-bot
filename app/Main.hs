@@ -25,13 +25,11 @@ import qualified Data.Text
 import Data.Text.Lazy (toStrict)
 import GHC.Generics (Generic)
 import Lib
-import Secret (botKey, botUsername, botWebhookIp)
+import Secret (botKey, botUsername)
 import Telegram.Bot.API
 import Telegram.Bot.Simple
-import Telegram.Bot.API.Webhook
 import Telegram.Bot.Simple.UpdateParser
-import Network.Wai.Handler.Warp (setPort, setHost, defaultSettings)
-import Network.Wai.Handler.WarpTLS (tlsSettings)
+import Debug.Trace
 
 
 data Action
@@ -116,8 +114,7 @@ rolesBot botName =
     updateToAction _ =
       parseUpdate $
         addChatId $
-          Help <$ command "help"
-            <|> Help <$ command (withBotName "help")
+          Help <$ commandWithBotName botName "help"
             <|> AddRole <$> command' "role_add"
             <|> AddRole <$> command' (withBotName "role_add")
             <|> RemoveRole <$> command' "role_remove"
@@ -126,9 +123,9 @@ rolesBot botName =
             <|> CreateRole <$> command (withBotName "role_create")
             <|> DeleteRole <$> command "role_delete"
             <|> DeleteRole <$> command (withBotName "role_delete")
-            <|> ListRoles <$ command "roles"
-            <|> ListRoles <$ command (withBotName "roles")
-            <|> Msg <$> message
+            <|> ListRoles <$ commandWithBotName botName "roles"
+            <|> 
+            Msg <$> message
     withBotName :: Text -> Text
     withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, mentionPrefix, botName]
 
@@ -222,8 +219,8 @@ rolesBot botName =
                in (nT, ent : e)
             createEntity offset u@(TelegramId _ name) =
               let len = Data.Text.length name
-               in MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing
-            createUser (TelegramId telegramId name) = User telegramId False name Nothing Nothing Nothing Nothing Nothing Nothing
+               in MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing Nothing
+            createUser (TelegramId telegramId name) = User telegramId False name Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
             addToBack start back = Data.Text.intercalate (Data.Text.pack " ") [start, back]
 
 validateAddRole :: Text -> Model -> Maybe Text
@@ -344,28 +341,8 @@ substring offset len = Data.Text.take len . Data.Text.drop offset
 run :: Token -> Text -> IO ()
 run token name = do
   env <- defaultTelegramClientEnv token
-  res <- startBotWebhook (conversationBot updateChatId $ rolesBot name) config env
+  res <- startBot (conversationBot updateChatId $ rolesBot name) env
   print res
-  where
-    tlsOpts = (tlsSettings "cert.pem" "key.pem")
-    warpOpts = setPort 8443 defaultSettings
-    certFile = Just $ InputFile "cert.pem" "application/x-pem-file"
-    url = "https://" ++ botWebhookIp ++ ":8443"
-    config = WebhookConfig
-               { webhookConfigTlsSettings       = tlsOpts,
-                 webhookConfigTlsWarpSettings   = warpOpts,
-                 webhookConfigSetWebhookRequest = requestData
-               } 
-    requestData =
-      SetWebhookRequest
-        { setWebhookUrl                 = url,
-          setWebhookCertificate         = certFile,
-          setWebhookIpAddress           = Nothing,
-          setWebhookMaxConnections      = Nothing,
-          setWebhookAllowedUpdates      = Just ["message"],
-          setWebhookDropPendingUpdates  = Nothing,
-          setWebhookSecretToken         = Nothing
-        }
 
 main :: IO ()
 main = do
