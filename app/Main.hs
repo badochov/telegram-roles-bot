@@ -76,13 +76,13 @@ entities = UpdateParser (updateMessage >=> messageEntities)
 messageChatId :: UpdateParser ChatId
 messageChatId = UpdateParser (updateMessage >=> (Just . chatId . messageChat))
 
-command' :: Text -> UpdateParser (Text, [MessageEntity])
-command' name = do
+commandWithBotName' :: Text -> Text -> UpdateParser (Text, [MessageEntity])
+commandWithBotName' botName name = do
   t <- text
   ents <- entities
   case Data.Text.words t of
     (w : _)
-      | w == "/" <> name ->
+      | w `elem` ["/" <> name <> mentionPrefix <> botName, "/" <> name]->
         pure (t, ents)
     _ -> fail "not that command"
 
@@ -115,18 +115,12 @@ rolesBot botName =
       parseUpdate $
         addChatId $
           Help <$ commandWithBotName botName "help"
-            <|> AddRole <$> command' "role_add"
-            <|> AddRole <$> command' (withBotName "role_add")
-            <|> RemoveRole <$> command' "role_remove"
-            <|> RemoveRole <$> command' (withBotName "role_remove")
-            <|> CreateRole <$> command "role_create"
-            <|> CreateRole <$> command (withBotName "role_create")
-            <|> DeleteRole <$> command "role_delete"
-            <|> DeleteRole <$> command (withBotName "role_delete")
+            <|> AddRole <$> commandWithBotName' botName "role_add"
+            <|> RemoveRole <$> commandWithBotName' botName "role_remove"
+            <|> CreateRole <$> commandWithBotName botName "role_create"
+            <|> DeleteRole <$> commandWithBotName botName "role_delete"
             <|> ListRoles <$ commandWithBotName botName "roles"
             <|> Msg <$> message
-    withBotName :: Text -> Text
-    withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, mentionPrefix, botName]
 
     handleAction :: (ChatId, Action) -> IO Model -> Eff (ChatId, Action) (IO Model)
     handleAction (chatId, action) model =
