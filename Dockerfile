@@ -9,6 +9,7 @@ RUN stack build --only-dependencies
 COPY . .
 
 RUN stack --local-bin-path build install
+RUN strip /build/telegram-roles-bot-exe
 
 FROM scratch AS export-stage
-COPY --from=build-stage /build/telegram-roles-bot-exe /telegram-roles-bot-exe_buster
+COPY --from=build-stage /build/telegram-roles-bot-exe /buster/

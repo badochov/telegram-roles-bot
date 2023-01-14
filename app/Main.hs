@@ -47,6 +47,7 @@ newtype ReplyMessageM = ReplyMessageM (Maybe ReplyMessage)
 newtype TextM = TextM (Maybe Text)
 
 instance GetAction ReplyMessageM a where
+  getNextAction :: BotM ReplyMessageM -> BotM (Maybe a)
   getNextAction effect = getNextAction do
     (ReplyMessageM t) <- effect
     case t of
@@ -54,6 +55,7 @@ instance GetAction ReplyMessageM a where
       Just m -> reply m
 
 instance GetAction TextM a where
+  getNextAction :: BotM TextM -> BotM (Maybe a)
   getNextAction effect = getNextAction do
     (TextM t) <- effect
     case t of
@@ -124,8 +126,7 @@ rolesBot botName =
             <|> DeleteRole <$> command "role_delete"
             <|> DeleteRole <$> command (withBotName "role_delete")
             <|> ListRoles <$ commandWithBotName botName "roles"
-            <|> 
-            Msg <$> message
+            <|> Msg <$> message
     withBotName :: Text -> Text
     withBotName cmd = Data.Text.intercalate Data.Text.empty [cmd, mentionPrefix, botName]
 
@@ -208,8 +209,8 @@ rolesBot botName =
               Just x -> Set.union x acc
             createMsg users =
               let (msgText, ents) = createMsgTextAndEntities users
-               in ReplyMessage msgText (Just MarkdownV2) (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
-            createMsgTextAndEntities users = Set.foldl createMsg' (Data.Text.empty, []) users
+               in ReplyMessage msgText (Just HTML) (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
+            createMsgTextAndEntities = Set.foldl createMsg' (Data.Text.empty, [])
             createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
             createMsg' (txt, e) (Username username) = (addToBack txt (mentionPrefix `Data.Text.append` username), e)
             createMsg' (txt, e) u@(TelegramId _ name) =
