@@ -47,7 +47,6 @@ newtype ReplyMessageM = ReplyMessageM (Maybe ReplyMessage)
 newtype TextM = TextM (Maybe Text)
 
 instance GetAction ReplyMessageM a where
-  getNextAction :: BotM ReplyMessageM -> BotM (Maybe a)
   getNextAction effect = getNextAction do
     (ReplyMessageM t) <- effect
     case t of
@@ -55,7 +54,6 @@ instance GetAction ReplyMessageM a where
       Just m -> reply m
 
 instance GetAction TextM a where
-  getNextAction :: BotM TextM -> BotM (Maybe a)
   getNextAction effect = getNextAction do
     (TextM t) <- effect
     case t of
@@ -208,20 +206,13 @@ rolesBot botName =
               Nothing -> acc
               Just x -> Set.union x acc
             createMsg users =
-              let (msgText, ents) = createMsgTextAndEntities users
-               in ReplyMessage msgText (Just HTML) (Just ents) Nothing Nothing Nothing (Just mid) Nothing Nothing
-            createMsgTextAndEntities = Set.foldl createMsg' (Data.Text.empty, [])
-            createMsg' :: (Text, [MessageEntity]) -> Mention -> (Text, [MessageEntity])
-            createMsg' (txt, e) (Username username) = (addToBack txt (mentionPrefix `Data.Text.append` username), e)
-            createMsg' (txt, e) u@(TelegramId _ name) =
-              let offset = Data.Text.length txt + 1
-                  nT = addToBack txt name
-                  ent = createEntity offset u
-               in (nT, ent : e)
-            createEntity offset u@(TelegramId _ name) =
-              let len = Data.Text.length name
-               in MessageEntity MessageEntityTextMention offset len Nothing (Just $ createUser u) Nothing Nothing
-            createUser (TelegramId telegramId name) = User telegramId False name Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+              let msgText = createMsgTextAndEntities users
+               in ReplyMessage msgText (Just HTML) Nothing Nothing Nothing Nothing (Just mid) Nothing Nothing
+            createMsgTextAndEntities = Set.foldl createMsg' Data.Text.empty
+            createMsg' :: Text -> Mention -> Text
+            createMsg' txt (Username username) = addToBack txt (mentionPrefix `Data.Text.append` username)
+            createMsg' txt (TelegramId (UserId tId) name) =
+                addToBack txt (Data.Text.concat ["<a href=\"tg://user?id=", Data.Text.pack (show tId), "\">", name, "</a>"])
             addToBack start back = Data.Text.intercalate (Data.Text.pack " ") [start, back]
 
 validateAddRole :: Text -> Model -> Maybe Text
